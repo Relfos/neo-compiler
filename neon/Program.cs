@@ -1,4 +1,5 @@
-﻿using Neo.Compiler.MSIL;
+﻿using Neo.Compiler.Debug;
+using Neo.Compiler.MSIL;
 using System;
 using System.IO;
 using System.Reflection;
@@ -24,6 +25,7 @@ namespace Neo.Compiler
             log.Log("Neo.Compiler.MSIL console app v" + Assembly.GetEntryAssembly().GetName().Version);
 
             bool bCompatible = false;
+            bool bDebug = false;
             string filename = null;
             for (var i = 0; i < args.Length; i++)
             {
@@ -32,6 +34,11 @@ namespace Neo.Compiler
                     if (args[i] == "--compatible")
                     {
                         bCompatible = true;
+                    }
+                    else
+                    if (args[i] == "--debug")
+                    {
+                        bDebug = true;
                     }
 
                     //other option
@@ -46,6 +53,7 @@ namespace Neo.Compiler
             {
                 log.Log("need one param for DLL filename.");
                 log.Log("[--compatible] disable nep8 function");
+                log.Log("[--debug] generate debugger info");
                 log.Log("Example:neon abc.dll --compatible");
                 return;
             }
@@ -102,6 +110,7 @@ namespace Neo.Compiler
             byte[] bytes = null;
             bool bSucc = false;
             string jsonstr = null;
+            string debugmapstr = null;
             //convert and build
             try
             {
@@ -124,6 +133,22 @@ namespace Neo.Compiler
                 catch (Exception err)
                 {
                     log.Log("gen abi Error:" + err.ToString());
+                }
+
+                if (bDebug)
+                {
+                    try
+                    {
+                        var outjson = DebugInfo.ExportDebugInfo(onlyname, am);
+                        StringBuilder sb = new StringBuilder();
+                        outjson.ConvertToStringWithFormat(sb, 0);
+                        debugmapstr = sb.ToString();
+                        log.Log("gen debug map succ");
+                    }
+                    catch (Exception err)
+                    {
+                        log.Log("gen debug map Error:" + err.ToString());
+                    }
                 }
 
             }
@@ -163,6 +188,25 @@ namespace Neo.Compiler
                 log.Log("Write abi Error:" + err.ToString());
                 return;
             }
+
+            if (bDebug)
+            {
+                try
+                {
+                    string debugname = onlyname + ".debug.json";
+
+                    System.IO.File.Delete(debugname);
+                    System.IO.File.WriteAllText(debugname, debugmapstr);
+                    log.Log("write:" + debugname);
+                    bSucc = true;
+                }
+                catch (Exception err)
+                {
+                    log.Log("Write debug Error:" + err.ToString());
+                    return;
+                }
+            }
+
             try
             {
                 fs.Dispose();

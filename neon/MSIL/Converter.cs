@@ -958,12 +958,7 @@ namespace Neo.Compiler.MSIL
                     }
                     break;
                 default:
-#if WITHPDB
-                    logger.Log("unsupported instruction " + src.code + "\r\n   in: " + to.name + "\r\n");
-                    break;
-#else
                     throw new Exception("unsupported instruction " + src.code + "\r\n   in: " + to.name + "\r\n");
-#endif
             }
 
             return skipcount;

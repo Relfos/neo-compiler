@@ -1,4 +1,4 @@
-﻿using Neo.Compiler.Debug;
+﻿using Neo.Compiler.Debugger;
 using Neo.Compiler.MSIL;
 using System;
 using System.IO;
